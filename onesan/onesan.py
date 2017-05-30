@@ -54,4 +54,6 @@ class Onesan(object):
             pred = classifier.predict(self.pick_andvalue(self.X_test, self.to_selectvec(i)))
             mse = ((pred - self.Y_test) ** 2).mean(axis=None)
 
-            result.append([1, ''.join(map(str, self.to_selectvec(i))), mse])
+            result.append([i, ''.join(map(str, self.to_selectvec(i))), mse])
+
+        return result
