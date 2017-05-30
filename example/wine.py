@@ -1,6 +1,5 @@
 import sys
-sys.path.append('../onesan')
-import onesan
+from onesan import onesan
 import pandas
 import numpy as np
 
