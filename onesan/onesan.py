@@ -1,5 +1,6 @@
 import sklearn.svm as SVM
 from sklearn.model_selection import train_test_split
+import sklearn.metrics
 import copy
 from tqdm import tqdm
 
@@ -52,8 +53,8 @@ class Onesan(object):
             classifier.fit(self.pick_andvalue(self.X_train, self.to_selectvec(i)), self.Y_train)
 
             pred = classifier.predict(self.pick_andvalue(self.X_test, self.to_selectvec(i)))
-            mse = ((pred - self.Y_test) ** 2).mean(axis=None)
+            accuracy = sklearn.metrics.accuracy_score(pred, self.Y_test)
 
-            result.append([i, ''.join(map(str, self.to_selectvec(i))), mse])
+            result.append([i, ''.join(map(str, self.to_selectvec(i))), accuracy])
 
         return result
