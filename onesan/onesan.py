@@ -31,7 +31,7 @@ class Onesan(object):
                 self.classifier = SVM.LinearSVC(**classifier_param)
 
     def to_selectvec(self, code):
-        bcode = format(code, '011b')
+        bcode = format(code, '0%db' % self.Xdim)
         return list(map(int, list(bcode)))
 
     def pick_andvalue(self, X, code):
