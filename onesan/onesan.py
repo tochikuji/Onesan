@@ -3,7 +3,11 @@ from sklearn.model_selection import train_test_split
 import sklearn.metrics
 import copy
 from tqdm import tqdm
-from functools import reduce
+import warnings
+
+
+warnings.filterwarnings('ignore',
+                        category=sklearn.exceptions.UndefinedMetricWarning)
 
 
 def to_selectvec(code, Xdim):
@@ -93,8 +97,6 @@ class Onesan(object):
     def __run_multiple_onesans(self):
         import multiprocessing as mp
 
-        # pools = mp.pool.Pool(self.n_onesan)
-
         targets = range(1, self.combinations)
         cellsize = int(self.combinations / self.n_onesan)
         queue = mp.Queue()
@@ -103,8 +105,6 @@ class Onesan(object):
             (queue, targets[i * cellsize:i * cellsize + cellsize],
              self.classifier, self.Xdim, self.X_train, self.Y_train,
              self.X_test, self.Y_test) for i in range(self.n_onesan)]
-
-        # parallel_result = pools.imap_unordered(calc_subset_wrapper, tasks)
 
         ps = [mp.Process(target=calc_subset_wrapper, args=task)
               for task in tasks]
@@ -115,10 +115,6 @@ class Onesan(object):
         result = list()
         for _ in tqdm(range(1, self.combinations)):
             result.append(queue.get())
-
-        # pools.close()
-
-        # result = reduce(lambda x, y: x + y, parallel_result)
 
         return result
 
