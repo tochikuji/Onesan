@@ -20,29 +20,32 @@ def pick_andvalue(X, code):
     return X[:, slist]
 
 
-def calc_subset(subset, classifier, Xdim,
-                X_train, Y_train, X_test, Y_test):
-    result = list()
+def calc_score(targ, classifier, Xdim,
+               X_train, Y_train, X_test, Y_test):
 
-    for i in subset:
-        classifier_print = copy.deepcopy(classifier)
-        # train classifier
-        classifier_print.fit(pick_andvalue(
-            X_train, to_selectvec(i, Xdim)), Y_train)
+    classifier_print = copy.deepcopy(classifier)
+    # train classifier
+    classifier_print.fit(pick_andvalue(
+        X_train, to_selectvec(targ, Xdim)), Y_train)
 
-        pred = classifier_print.predict(pick_andvalue(
-            X_test, to_selectvec(i, Xdim)))
+    pred = classifier_print.predict(pick_andvalue(
+        X_test, to_selectvec(targ, Xdim)))
 
-        accuracy = sklearn.metrics.accuracy_score(pred, Y_test)
+    metric = sklearn.metrics.precision_recall_fscore_support(Y_test, pred)
 
-        result.append([i, ''.join(map(str, to_selectvec(i, Xdim))),
-                       accuracy])
-
-    return result
+    return [targ, ''.join(map(str, to_selectvec(targ, Xdim))), metric]
 
 
 def calc_subset_wrapper(params):
-    return calc_subset(*params)
+    result = list()
+
+    subset, classifier, Xdim, X_train, Y_train, X_test, Y_test = params
+
+    for targ in subset:
+        result.append(calc_score(targ, classifier, Xdim,
+                                 X_train, Y_train, X_test, Y_test))
+
+    return result
 
 
 class Onesan(object):
@@ -84,18 +87,12 @@ class Onesan(object):
         result = list()
 
         for i in tqdm(range(1, self.combinations)):
-            classifier = copy.deepcopy(self.classifier)
-            # train classifier
-            classifier.fit(pick_andvalue(
-                self.X_train, to_selectvec(i, self.Xdim)), self.Y_train)
+            result.append(calc_score(
+                i, self.classifier, self.Xdim, self.X_train,
+                self.Y_train, self.X_test, self.Y_test)
+            )
 
-            pred = classifier.predict(pick_andvalue(
-                self.X_test, to_selectvec(i, self.Xdim)))
-
-            accuracy = sklearn.metrics.accuracy_score(pred, self.Y_test)
-
-            result.append([i, ''.join(map(str, to_selectvec(i, self.Xdim))),
-                           accuracy])
+        return result
 
     def __run_multiple_onesans(self):
         import multiprocessing as mp
