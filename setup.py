@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 setup(name='Onesan',
-      version='0.1.1',
+      version='0.1.2',
       description='Bruteforce feature selector',
       author='Aiga SUZUKI',
       author_email='ai-suzuki@aist.go.jp',
