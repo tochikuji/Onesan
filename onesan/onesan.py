@@ -36,16 +36,12 @@ def calc_score(targ, classifier, Xdim,
     return [targ, ''.join(map(str, to_selectvec(targ, Xdim))), metric]
 
 
-def calc_subset_wrapper(params):
-    result = list()
-
-    subset, classifier, Xdim, X_train, Y_train, X_test, Y_test = params
+def calc_subset_wrapper(*params):
+    queue, subset, classifier, Xdim, X_train, Y_train, X_test, Y_test = params
 
     for targ in subset:
-        result.append(calc_score(targ, classifier, Xdim,
-                                 X_train, Y_train, X_test, Y_test))
-
-    return result
+        queue.put(calc_score(targ, classifier, Xdim,
+                             X_train, Y_train, X_test, Y_test))
 
 
 class Onesan(object):
@@ -97,19 +93,32 @@ class Onesan(object):
     def __run_multiple_onesans(self):
         import multiprocessing as mp
 
-        pools = mp.pool.Pool(self.n_onesan)
+        # pools = mp.pool.Pool(self.n_onesan)
 
         targets = range(1, self.combinations)
         cellsize = int(self.combinations / self.n_onesan)
+        queue = mp.Queue()
+
         tasks = [
-            (targets[i * cellsize:i * cellsize + cellsize],
+            (queue, targets[i * cellsize:i * cellsize + cellsize],
              self.classifier, self.Xdim, self.X_train, self.Y_train,
              self.X_test, self.Y_test) for i in range(self.n_onesan)]
 
-        parallel_result = pools.map(calc_subset_wrapper, tasks)
-        pools.close()
+        # parallel_result = pools.imap_unordered(calc_subset_wrapper, tasks)
 
-        result = reduce(lambda x, y: x + y, parallel_result)
+        ps = [mp.Process(target=calc_subset_wrapper, args=task)
+              for task in tasks]
+
+        for p in ps:
+            p.start()
+
+        result = list()
+        for _ in tqdm(range(1, self.combinations)):
+            result.append(queue.get())
+
+        # pools.close()
+
+        # result = reduce(lambda x, y: x + y, parallel_result)
 
         return result
 
