@@ -20,7 +20,7 @@ MIT
 
 # Usage
 
-```
+```python
 from onesan import onesan
 
 # prepare the training and validation dataset
