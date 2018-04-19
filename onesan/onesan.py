@@ -24,7 +24,7 @@ def pick_andvalue(X, code):
     return X[:, slist]
 
 
-def calc_score(targ, classifier, Xdim,
+def calc_score(targ, classifier, evaluator, Xdim,
                X_train, Y_train, X_test, Y_test):
 
     classifier_print = copy.deepcopy(classifier)
@@ -35,23 +35,25 @@ def calc_score(targ, classifier, Xdim,
     pred = classifier_print.predict(pick_andvalue(
         X_test, to_selectvec(targ, Xdim)))
 
-    metric = sklearn.metrics.precision_recall_fscore_support(Y_test, pred)
+    metric = evaluator(Y_test, pred)
 
     return [targ, ''.join(map(str, to_selectvec(targ, Xdim))), metric]
 
 
 def calc_subset_wrapper(*params):
-    queue, subset, classifier, Xdim, X_train, Y_train, X_test, Y_test = params
+    queue, subset, classifier, evaluator, Xdim, X_train, Y_train, X_test, Y_test = params
 
     for targ in subset:
-        queue.put(calc_score(targ, classifier, Xdim,
+        queue.put(calc_score(targ, classifier, evaluator, Xdim,
                              X_train, Y_train, X_test, Y_test))
 
 
 class Onesan(object):
 
     def __init__(self, X, Y, train_size=0.8, classifier=None,
-                 classifier_param=None, n_onesan=1):
+                 classifier_param=None,
+                 evaluator=lambda t, pred : sklearn.metrics.f1_score(t, pred, average='macro'),
+                 n_onesan=1):
 
         # divide dataset into train and test
         self.X_train, self.X_test, self.Y_train, self.Y_test = \
@@ -62,6 +64,9 @@ class Onesan(object):
         # number of dimensions
         self.Xdim = self.X_train.shape[-1]
         self.combinations = 2 ** self.Xdim
+
+        # evaluation metrix
+        self.evaluator = evaluator
 
         # number of parallel processes
         self.n_onesan = n_onesan
@@ -88,7 +93,7 @@ class Onesan(object):
 
         for i in tqdm(range(1, self.combinations)):
             result.append(calc_score(
-                i, self.classifier, self.Xdim, self.X_train,
+                i, self.classifier, self.evaluator, self.Xdim, self.X_train,
                 self.Y_train, self.X_test, self.Y_test)
             )
 
@@ -103,7 +108,7 @@ class Onesan(object):
 
         tasks = [
             (queue, targets[i * cellsize:i * cellsize + cellsize],
-             self.classifier, self.Xdim, self.X_train, self.Y_train,
+             self.classifier, self.evaluator, self.Xdim, self.X_train, self.Y_train,
              self.X_test, self.Y_test) for i in range(self.n_onesan)]
 
         ps = [mp.Process(target=calc_subset_wrapper, args=task)
