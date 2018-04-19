@@ -52,10 +52,15 @@ returns list of list
 ## Onesan
 
 ### initializer
-`__init__(self, X, Y, train_size=0.8, n_onesan=1, classifier=None, classifier_param=None)`  
+`__init__(self, X, Y, train_size=0.8, n_onesan=1, evaluator=DefaultEvaluator, classifier=None, classifier_param=None)`  
 
 `n_onesan` specifies a number of onesans.  If `n_onesan == 1`, Onesan would run alone.
 If `n_onesan >= 2`, Onesan would fission into child processes and runs almost `n_onesan` times faster.  
+
+`evaluator` specifies the evaluation metrics for resulting classification performance. `evaluator` takes callable object
+which takes 2 arguments, true label `t` and prediction `y`.
+`sklearn.metrics.precision_recall_fscore_support` will be chosen by default.  
+
 We can specify the classifier onesan uses.  
 The `classifier` must have `fit` and `predict` method to training and validation
 the model.  

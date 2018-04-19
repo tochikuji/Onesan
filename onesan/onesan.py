@@ -54,6 +54,20 @@ class Onesan(object):
                  classifier_param=None,
                  evaluator=lambda t, pred : sklearn.metrics.f1_score(t, pred, average='macro'),
                  n_onesan=1):
+        """
+        Onesan robot who searches combinations of features for the classification task.
+
+        Args:
+            X (numpy.ndarray): the set of feature which has shape (N, d)
+            Y (numpy.ndarray): target label corresponding to `X`
+            train_size (float): ratio between numbers of training and validation samples
+            classifier: instance of classifier, which shold inherit sklearn.classifier
+            classifier_param: parameters which given for classifier
+            evaluator: performance metric for the classification results,
+                which takes 2 arguments (true label, prediction)
+            n_onesan: number of onesan; if it is 1, onesan will run alone, otherwise,
+                onesan will self-replicate and run together! (multiprocessing)
+        """
 
         # divide dataset into train and test
         self.X_train, self.X_test, self.Y_train, self.Y_test = \
